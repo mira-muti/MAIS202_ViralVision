@@ -1,35 +1,39 @@
 """
 File: predict.py
 
-Owner: Backend Pod – Shared (Person 1 & 2)
+Owner: Backend Pod – Person 2 (lead), Person 1 assists
 
 Purpose: 
     Load the trained model and run inference on new video files.
     This module provides the interface between the model and the Streamlit app.
     
 Functions to implement:
+    - extract_features_from_video(video_path): Run full pipeline on one video
     - load_trained_model(model_path): Load the saved model from disk
-    - predict_single_video(video_path, model): Predict virality for one video
-    - predict_with_confidence(video_path, model): Return prediction + confidence scores
+    - predict_from_video(video_path, model_path): Main prediction function
     - batch_predict(video_paths, model): Predict for multiple videos at once
 
 Collaboration Rules:
-    - Both backend team members can edit this file.
+    - Person 2 leads this file.
     - Must be compatible with streamlit_app.py (Frontend Dev will call these functions).
     - Document input/output formats clearly.
     - Handle errors gracefully (missing files, corrupted videos, etc.).
-    - Keep function signatures stable once agreed upon.
 
 Dependencies:
     - joblib or pickle (model loading)
-    - preprocess.py (feature extraction functions)
+    - audio_features, visual_features (feature extraction)
     - pandas, numpy
+    - subprocess (for ffmpeg calls)
 """
 
 import pandas as pd
 import numpy as np
+import subprocess
+from pathlib import Path
+from typing import Dict, Any, List
 # import joblib
-# from src.preprocess import extract_audio_features, extract_visual_features
+# from audio_features import extract_audio_features
+# from visual_features import extract_visual_features
 
 
 def load_trained_model(model_path='models/model.pkl'):
@@ -49,42 +53,65 @@ def load_trained_model(model_path='models/model.pkl'):
     pass
 
 
-def predict_single_video(video_path, model=None):
+def extract_features_from_video(video_path: str) -> pd.DataFrame:
     """
-    Predict whether a single video will go viral.
+    Run full feature extraction pipeline on a single video.
     
     Args:
-        video_path (str): Path to the video file
-        model: Trained classifier (if None, will load default model)
+        video_path (str): Path to video file (.mp4)
         
     Returns:
-        str: Prediction label ('Viral' or 'Not Viral')
+        pd.DataFrame: Single-row DataFrame with all features
+        
+    Steps:
+        1. Create temp directories for audio and frames
+        2. Extract audio (first 5s) using ffmpeg
+        3. Sample frames (1 fps, first 5s) using ffmpeg
+        4. Extract audio features using audio_features.py
+        5. Extract visual features using visual_features.py
+        6. Combine into one DataFrame row
+        7. Clean up temp files
         
     Notes:
-        - Extract features using preprocess.py functions
-        - Apply same preprocessing as training data
-        - Return simple string result for easy display
+        - Handles the full ffmpeg → feature extraction pipeline
+        - Used by predict_from_video() for inference
+        - Temp files stored in media/temp/ (cleaned after)
     """
     pass
 
 
-def predict_with_confidence(video_path, model=None):
+def predict_from_video(video_path: str, model_path: str = 'models/model.pkl') -> Dict[str, Any]:
     """
-    Predict virality with confidence scores.
+    Predict virality for a single video (main inference function).
     
     Args:
-        video_path (str): Path to the video file
-        model: Trained classifier (if None, will load default model)
+        video_path (str): Path to video file
+        model_path (str): Path to trained model
         
     Returns:
-        dict: Dictionary containing:
-            - prediction: 'Viral' or 'Not Viral'
-            - confidence: probability score (0-1)
-            - all_probabilities: dict of probabilities for each class
-            
+        Dict[str, Any]: Dictionary containing:
+            - score: 0-100 score (probability * 100)
+            - label: "High" or "Low"
+            - top_features: List of dicts with feature contributions
+              [{"name": "avg_brightness", "direction": "+", "contrib": 0.21}, ...]
+              
+    Example:
+        >>> result = predict_from_video('test_video.mp4')
+        >>> print(result)
+        {
+            "score": 78,
+            "label": "High",
+            "top_features": [
+                {"name": "tempo_bpm", "direction": "+", "contrib": 0.25},
+                {"name": "motion_score", "direction": "+", "contrib": 0.18},
+                ...
+            ]
+        }
+        
     Notes:
-        - Use model.predict_proba() for confidence scores
-        - Frontend will use this for displaying probability bars
+        - This is the main function called by Streamlit app
+        - Handles errors gracefully (returns error dict if fails)
+        - Feature importance from Random Forest feature_importances_
     """
     pass
 

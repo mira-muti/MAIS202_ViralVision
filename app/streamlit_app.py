@@ -42,7 +42,7 @@ import os
 # Add src directory to path to import backend functions
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-# from predict import load_trained_model, predict_with_confidence
+# from predict import load_trained_model, predict_from_video
 
 
 @st.cache_resource
@@ -92,15 +92,16 @@ def display_prediction_results(result):
     Display prediction results with visualizations.
     
     Args:
-        result (dict): Dictionary from predict_with_confidence()
-            - prediction: 'Viral' or 'Not Viral'
-            - confidence: probability score
-            - all_probabilities: dict of all class probabilities
+        result (dict): Dictionary from predict_from_video()
+            - score: 0-100 score (probability * 100)
+            - label: "High" or "Low"
+            - top_features: list of feature contributions
             
     Shows:
         - Big, clear prediction text
-        - Confidence score with progress bar
-        - Emoji indicators (🔥 for viral, 🤷 for not viral)
+        - Score with progress bar (0-100)
+        - Emoji indicators (🔥 for High, 📉 for Low)
+        - Top contributing features
         - Interpretation of the results
     """
     pass

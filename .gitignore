@@ -25,14 +25,21 @@ ENV/
 models/*.pkl
 
 # Data Files (videos and large datasets)
-data/raw/
+data/raw/metadata.csv  # Keep structure but ignore actual data
 *.mp4
 *.avi
 *.mov
 *.mkv
 *.flv
 *.wmv
+*.wav
 data/*.csv  # Uncomment if CSVs are too large
+
+# Media Files (videos, audio, frames - too large for Git)
+media/videos/
+media/audio/
+media/frames/
+media/temp/
 
 # IDE
 .vscode/

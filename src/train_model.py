@@ -50,12 +50,15 @@ def load_dataset(csv_path):
         csv_path (str): Path to the final_dataset.csv file
         
     Returns:
-        tuple: (X, y) where X is features DataFrame and y is target labels
+        tuple: (X, y) where X is features DataFrame and y is target labels (High/Low)
         
     Notes:
-        - Handle missing values
+        - Target column is 'perf_label' with values 'High' or 'Low'
+        - Feature columns: rms, tempo_bpm, spectral_centroid, zcr, mfcc1-5,
+          avg_brightness, contrast, color_var, motion_score, faces
+        - Handle missing values (impute or drop)
         - Perform any necessary feature scaling/normalization
-        - Split features from target column
+        - Encode labels: High=1, Low=0
     """
     pass
 
