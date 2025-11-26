@@ -6,33 +6,45 @@ Purpose:
 """
 
 
-def extract_fft_features(video_path, seconds=5):
+def extract_fft_features(video_path, seconds=60):
     """
     Extract dominant frequency and amplitude from the first N seconds of a video.
-    Fully compatible with modern MoviePy (AudioFileClip no longer supports .subclip()).
+    Fully compatible with modern MoviePy (uses audio extraction without subclip).
+    Defaults to 60 seconds to capture more audio data for better analysis.
     """
     try:
         import numpy as np
-        from moviepy.editor import VideoFileClip
+        from moviepy import VideoFileClip
 
         # Load video
         video = VideoFileClip(video_path)
 
-        # Ensure the clip is long enough
-        clip_duration = min(seconds, video.duration)
-
-        # Extract audio from the first N seconds of the VIDEO subclip
-        subclip = video.subclip(0, clip_duration)
-        audio = subclip.audio
+        # Extract audio from the video
+        audio = video.audio
         if audio is None:
+            video.close()
             raise RuntimeError("This video has no audio track.")
 
-        # Convert audio to samples
-        audio_fps = audio.fps
-        samples = audio.to_soundarray(fps=audio_fps)
+        # Ensure the clip duration (use up to 'seconds' or full video if shorter)
+        clip_duration = min(seconds, video.duration)
 
-        # Convert to mono
-        mono = samples.mean(axis=1)
+        # Get audio samples for the first N seconds
+        audio_fps = audio.fps
+        # Calculate how many samples we need for the desired duration
+        num_samples = int(clip_duration * audio_fps)
+        
+        # Extract audio samples
+        samples = audio.to_soundarray(fps=audio_fps, nbytes=2)
+        
+        # Limit to the first N seconds
+        if len(samples) > num_samples:
+            samples = samples[:num_samples]
+
+        # Convert to mono (average across channels if stereo)
+        if len(samples.shape) > 1:
+            mono = samples.mean(axis=1)
+        else:
+            mono = samples
 
         # FFT
         fft_vals = np.abs(np.fft.rfft(mono))
@@ -44,9 +56,8 @@ def extract_fft_features(video_path, seconds=5):
         max_amp = float(fft_vals[idx])
 
         # Cleanup
-        video.close()
-        subclip.close()
         audio.close()
+        video.close()
 
         return max_freq, max_amp
 

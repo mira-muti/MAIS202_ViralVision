@@ -1,0 +1,52 @@
+[
+  {
+    "timestamp": "2025-11-25T22:50:44.933518",
+    "date": "2025-11-25 22:50:44",
+    "video_name": "backtofriends.mov",
+    "title": "Back to friends - Sombr ",
+    "niche": "music",
+    "predicted_label": "Low",
+    "prob_high": 0.04361111111111111,
+    "prob_low": 0.9563888888888888
+  },
+  {
+    "timestamp": "2025-11-25T22:45:32.611435",
+    "date": "2025-11-25 22:45:32",
+    "video_name": "wildflower.mov",
+    "title": "Wildflower - Billie Eilish",
+    "niche": "music",
+    "predicted_label": "Low",
+    "prob_high": 0.03333333333333333,
+    "prob_low": 0.9666666666666667
+  },
+  {
+    "timestamp": "2025-11-25T22:44:08.770957",
+    "date": "2025-11-25 22:44:08",
+    "video_name": "cas cry.mov",
+    "title": "cry by CAS - the other pov @sally kim . . . ",
+    "niche": "music",
+    "predicted_label": "Low",
+    "prob_high": 0.02106060606060606,
+    "prob_low": 0.9789393939393939
+  },
+  {
+    "timestamp": "2025-11-25T22:17:59.063581",
+    "date": "2025-11-25 22:17:59",
+    "video_name": "cas cry.mov",
+    "title": "cry by CAS - the other pov @sally kim . . . ",
+    "niche": "music",
+    "predicted_label": "Low",
+    "prob_high": 0.02106060606060606,
+    "prob_low": 0.9789393939393939
+  },
+  {
+    "timestamp": "2025-11-25T22:52:06.579168",
+    "date": "2025-11-25 22:52:06",
+    "video_name": "cas cry.mov",
+    "title": "Cigarettes after sex cover on violin",
+    "niche": "music",
+    "predicted_label": "Low",
+    "prob_high": 0.025,
+    "prob_low": 0.975
+  }
+]

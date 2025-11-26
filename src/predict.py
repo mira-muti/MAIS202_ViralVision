@@ -11,6 +11,7 @@ import joblib
 import os
 from pathlib import Path
 from src.extract_audio_features import extract_fft_features
+from src.prediction_logger import log_prediction
 
 
 MODEL_PATH = "models/model.pkl"
@@ -34,7 +35,7 @@ def _load_artifacts():
         _encoder = joblib.load(ENCODER_PATH)
 
 
-def predict_video(video_path, title, hashtags, niche):
+def predict_video(video_path, title, hashtags, niche, video_filename=None):
     """
     Predict engagement level for a video.
 
@@ -43,17 +44,22 @@ def predict_video(video_path, title, hashtags, niche):
         title: String caption
         hashtags: String of hashtags
         niche: String category (music, food, summervibes, etc.)
+        video_filename: Optional filename for logging
 
     Returns:
         dict with:
             - label: "High" or "Low"
-            - score: probability (0-100)
-            - top_features: list of (feature, importance)
+            - prob_high: probability of high engagement (0-1)
+            - prob_low: probability of low engagement (0-1)
+            - top_positive_features: list of positive feature contributions
+            - top_negative_features: list of negative feature contributions
+            - recommendations: list of improvement suggestions
+            - raw_feature_importances: dict of all feature importances
     """
     _load_artifacts()
     
-    # Extract audio features
-    fft_max_freq, fft_max_amp = extract_fft_features(video_path, seconds=5)
+    # Extract audio features (analyze first 60 seconds for better accuracy)
+    fft_max_freq, fft_max_amp = extract_fft_features(video_path, seconds=60)
     
     # Compute text features
     caption_length = len(title) if title else 0
@@ -86,26 +92,164 @@ def predict_video(video_path, title, hashtags, niche):
     
     # Predict probability
     prob = _model.predict_proba(X)[0]
-    prob_high = prob[1] if len(prob) > 1 else prob[0]
+    # prob[0] = Low, prob[1] = High (based on label encoding: High=1, Low=0)
+    prob_low = float(prob[0])
+    prob_high = float(prob[1]) if len(prob) > 1 else float(prob[0])
     
     # Convert to label
     label = "High" if prob_high >= 0.5 else "Low"
-    score = float(prob_high * 100)
     
     # Extract feature importances
+    raw_feature_importances = {}
+    top_positive_features = []
+    top_negative_features = []
+    
     if hasattr(_model, 'feature_importances_'):
         importances = _model.feature_importances_
         feature_names = X.columns.tolist()
+        
+        # Store raw importances
+        for name, importance in zip(feature_names, importances):
+            raw_feature_importances[name] = float(importance)
+        
+        # For RandomForest, all importances are positive
+        # Top features = highest importance (helped performance)
+        # Bottom features = lowest importance (less impactful, areas to improve)
         feature_importance_pairs = list(zip(feature_names, importances))
-        top_features = sorted(feature_importance_pairs, key=lambda x: x[1], reverse=True)
-    else:
-        top_features = []
+        sorted_features = sorted(feature_importance_pairs, key=lambda x: x[1], reverse=True)
+        
+        # Top 5 as positive (helped)
+        top_positive_features = [
+            {'feature': name, 'importance': float(imp)}
+            for name, imp in sorted_features[:5]
+        ]
+        
+        # Bottom 5 as "areas to improve" (less impactful)
+        # Only include if there are enough features and they're significantly lower
+        # EXCLUDE niche features from negative list (they're not actionable improvements)
+        if len(sorted_features) > 5:
+            avg_importance = sum(imp for _, imp in sorted_features) / len(sorted_features)
+            bottom_features = sorted_features[-5:]
+            top_negative_features = [
+                {'feature': name, 'importance': float(avg_importance - imp)}
+                for name, imp in bottom_features
+                if imp < avg_importance * 0.5 and 'niche' not in name.lower()  # Exclude niche features
+            ][:5]
     
-    return {
+    # Generate recommendations based on features and niche
+    recommendations = _generate_recommendations(
+        caption_length, hashtag_count, fft_max_freq, fft_max_amp, 
+        prob_high, top_positive_features, top_negative_features, niche
+    )
+    
+    result = {
         'label': label,
-        'score': score,
-        'top_features': top_features
+        'prob_high': prob_high,
+        'prob_low': prob_low,
+        'top_positive_features': top_positive_features,
+        'top_negative_features': top_negative_features,
+        'recommendations': recommendations,
+        'raw_feature_importances': raw_feature_importances
     }
+    
+    # Log the prediction
+    if video_filename:
+        log_prediction(video_filename, title, niche, result)
+    
+    return result
+
+
+def _generate_recommendations(caption_length, hashtag_count, fft_max_freq, fft_max_amp, 
+                              prob_high, positive_features, negative_features, niche='music'):
+    """Generate personalized recommendations based on features and niche."""
+    recommendations = []
+    is_music = niche.lower() == 'music'
+    
+    if is_music:
+        # Music-specific recommendations
+        if caption_length < 20:
+            recommendations.append("Try adding storytelling or context to your caption. Longer captions (30-60 chars) tend to perform better.")
+        elif caption_length > 100:
+            recommendations.append("Your caption is quite long. Consider making it more concise while keeping key information.")
+        else:
+            recommendations.append("Your caption length contributes positively ✍️")
+        
+        if hashtag_count == 0:
+            recommendations.append("Add 2-4 relevant hashtags to increase discoverability and reach.")
+        elif hashtag_count < 3:
+            recommendations.append("Consider adding a few more hashtags (3-5 total) for better visibility.")
+        elif hashtag_count > 10:
+            recommendations.append("You're using many hashtags. Focus on 3-5 most relevant ones for better results.")
+        else:
+            recommendations.append("Your hashtag strategy is working well 💯")
+        
+        if fft_max_freq > 500:
+            recommendations.append("Your audio matches trending high-energy tracks. This aligns with high-performing content! 🎧")
+        elif fft_max_freq < 100:
+            recommendations.append("Consider using more energetic audio to match trending content patterns.")
+        
+        if fft_max_amp > 100000000:
+            recommendations.append("Strong audio energy detected. This contributes positively 🔥")
+        
+        # Music-specific tips
+        if prob_high < 0.4:
+            recommendations.append("For music covers, try 7-10 second intros. Hook speed in first 1-2 seconds is crucial ✂️")
+        
+    else:
+        # GRWM-specific recommendations
+        if caption_length < 20:
+            recommendations.append("Try adding more context or storytelling to your caption. GRWM viewers love personal touches ✨")
+        elif caption_length > 100:
+            recommendations.append("Your caption is quite long. Consider making it more concise while keeping key information.")
+        else:
+            recommendations.append("Your caption tone is on point 💅")
+        
+        if hashtag_count == 0:
+            recommendations.append("Add 2-4 lifestyle/aesthetic hashtags to increase discoverability.")
+        elif hashtag_count < 3:
+            recommendations.append("Consider adding a few more hashtags (3-5 total) focused on lifestyle/aesthetic tags.")
+        elif hashtag_count > 10:
+            recommendations.append("You're using many hashtags. Focus on 3-5 most relevant lifestyle/aesthetic ones.")
+        else:
+            recommendations.append("Hashtag diversity is good 📱")
+        
+        if fft_max_freq > 500:
+            recommendations.append("Audio vibe matches aesthetic content. This aligns with high-performing GRWM videos! 🎵")
+        elif fft_max_freq < 100:
+            recommendations.append("Consider using brighter, more energetic audio to match aesthetic vibes.")
+        
+        if fft_max_amp > 100000000:
+            recommendations.append("Audio presence is strong. This contributes positively 🎧")
+        
+        # GRWM-specific tips
+        if prob_high < 0.4:
+            recommendations.append("Consider tightening your opening 1.2 seconds. Intro drag can hurt engagement ✂️")
+            recommendations.append("Lighting could be brighter. Aesthetic consistency matters for GRWM content 💡")
+    
+    # Probability-based recommendations
+    if prob_high >= 0.7:
+        recommendations.append("Your video has strong potential! Keep up the great work 🎉")
+    elif prob_high < 0.4:
+        if is_music:
+            recommendations.append("Focus on improving caption quality and audio clarity to boost performance.")
+        else:
+            recommendations.append("Focus on pacing changes and caption optimization to boost performance.")
+    
+    # Feature-specific recommendations
+    positive_feature_names = [f['feature'] for f in positive_features[:3]]
+    if 'caption_length' in positive_feature_names:
+        recommendations.append("Caption strength is a key strength. Maintain this quality in future posts.")
+    if 'hashtag_count' in positive_feature_names:
+        recommendations.append("Hashtag strategy is working well. Continue using this approach.")
+    
+    negative_feature_names = [f['feature'] for f in negative_features[:3]]
+    if 'hashtag_count' in negative_feature_names:
+        if is_music:
+            recommendations.append("Optimize hashtag selection. Use trending, music-specific tags.")
+        else:
+            recommendations.append("Hashtags not focused enough. Use lifestyle/aesthetic tags.")
+    
+    return recommendations[:6]  # Limit to 6 recommendations
 
 
 if __name__ == "__main__":
