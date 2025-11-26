@@ -19,13 +19,15 @@ from sklearn.preprocessing import OneHotEncoder
 # Paths
 project_root = Path(__file__).parent.parent
 DATASET_PATH = project_root / "data" / "processed" / "final_dataset.csv"
-MODELS_DIR = project_root / "models"
-MODEL_PATH = MODELS_DIR / "model.pkl"
-ENCODER_PATH = MODELS_DIR / "model_encoder.pkl"
-FEATURE_NAMES_PATH = MODELS_DIR / "feature_names.json"
+
+# GRWM-specific model artifacts (stored under backend/models)
+MODELS_DIR = project_root / "backend" / "models"
+MODEL_PATH = MODELS_DIR / "grwm_model.pkl"
+ENCODER_PATH = MODELS_DIR / "grwm_encoder.pkl"
+FEATURE_NAMES_PATH = MODELS_DIR / "grwm_feature_names.json"
 
 # Ensure models directory exists
-MODELS_DIR.mkdir(exist_ok=True)
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_dataset():
@@ -86,8 +88,23 @@ def load_dataset():
     # Ensure label is numeric (0 or 1)
     df['label'] = pd.to_numeric(df['label'], errors='coerce')
     df = df[df['label'].isin([0, 1])]
+
+    # Filter to GRWM-related niches only (exclude pure music)
+    allowed_niches = {
+        'GRWM', 'grwm',
+        'OOTD', 'ootd',
+        'fyp', 'FYP',
+        'summervibes', 'summervibe', 'summer',
+        'food', 'Food',
+        'DIYProjects', 'diy', 'DIY',
+        'dance', 'Dance',
+    }
+    before_niche = len(df)
+    df = df[df['niche'].astype(str).isin(allowed_niches)]
+    after_niche = len(df)
     
     print(f"Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
+    print(f"  Filtered out {before_niche - after_niche} rows not in GRWM-related niches")
     print(f"Label distribution:")
     print(df['label'].value_counts().sort_index())
     print(f"  Low (0): {(df['label'] == 0).sum()}")

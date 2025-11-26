@@ -22,10 +22,10 @@ from prediction_logger import load_predictions
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
 
-# Configuration
-UPLOAD_FOLDER = 'data/uploads'
+# Configuration (store uploads under backend/data/uploads)
+UPLOAD_FOLDER = str(backend_dir / "data" / "uploads")
 ALLOWED_EXTENSIONS = {'mp4', 'mov', 'avi', 'mkv'}
-MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB
+MAX_FILE_SIZE = 300 * 1024 * 1024  # 300MB
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -41,8 +41,7 @@ def health():
     return jsonify({'status': 'ok'})
 
 
-@app.route('/api/predict', methods=['POST'])
-def predict():
+def _handle_predict():
     """Predict video engagement."""
     try:
         # Check if video file is present
@@ -67,6 +66,7 @@ def predict():
         
         # Save uploaded file
         filename = secure_filename(file.filename)
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
         video_path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(video_path)
         
@@ -81,20 +81,20 @@ def predict():
             )
             
             # Convert numpy types to native Python types for JSON
-            if 'top_positive_features' in result:
+            if 'top_positive_features' in result and isinstance(result['top_positive_features'], list):
                 result['top_positive_features'] = [
                     {
-                        'feature': f['feature'],
-                        'importance': float(f['importance'])
+                        'feature': f.get('feature'),
+                        'importance': float(f.get('importance', 0.0))
                     }
                     for f in result['top_positive_features']
                 ]
             
-            if 'top_negative_features' in result:
+            if 'top_negative_features' in result and isinstance(result['top_negative_features'], list):
                 result['top_negative_features'] = [
                     {
-                        'feature': f['feature'],
-                        'importance': float(f['importance'])
+                        'feature': f.get('feature'),
+                        'importance': float(f.get('importance', 0.0))
                     }
                     for f in result['top_negative_features']
                 ]
@@ -120,6 +120,18 @@ def predict():
         error_trace = traceback.format_exc()
         print(f"API error: {error_trace}", flush=True)
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/predict', methods=['POST'])
+def predict():
+    """Backward-compatible prediction endpoint."""
+    return _handle_predict()
+
+
+@app.route('/api/analyze', methods=['POST'])
+def analyze():
+    """New analyze endpoint (same behavior as /api/predict)."""
+    return _handle_predict()
 
 
 @app.route('/api/history', methods=['GET'])

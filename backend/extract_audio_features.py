@@ -3,7 +3,8 @@ Audio feature extraction module for ViralVision.
 
 This module extracts audio features from video files using MoviePy and Librosa.
 It provides both basic FFT features (for model compatibility) and extended
-audio analysis features for future improvements.
+audio analysis features for future improvements, including a music-specific
+feature set.
 """
 
 import numpy as np
@@ -42,41 +43,39 @@ def load_audio_segment(video_path: str, seconds: int = 5) -> Tuple[np.ndarray, i
     try:
         # Load video
         clip = VideoFileClip(str(video_path))
-        
+
         # Check if video has audio
         if clip.audio is None:
             clip.close()
             raise RuntimeError(f"Video has no audio track: {video_path}")
-        
+
         # Determine how many seconds to extract (don't exceed video duration)
         duration_to_extract = min(seconds, clip.duration)
-        
-        # Extract audio segment
-        audio_clip = clip.audio.subclip(0, duration_to_extract)
-        
-        # Export to temporary WAV file
-        import tempfile
-        import os
-        
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
-            temp_wav = tmp_file.name
-        
-        try:
-            # Write audio to temporary file
-            audio_clip.write_audiofile(temp_wav, verbose=False, logger=None)
-            
-            # Load with librosa (automatically converts to mono and resamples if needed)
-            y, sr = librosa.load(temp_wav, sr=None, mono=True)
-            
-            return y, sr
-            
-        finally:
-            # Clean up temporary file
-            if os.path.exists(temp_wav):
-                os.remove(temp_wav)
-            audio_clip.close()
-            clip.close()
-            
+
+        # Get audio samples from full audio and slice to desired duration
+        audio = clip.audio
+        audio_fps = audio.fps
+
+        # Convert entire audio to samples
+        samples = audio.to_soundarray(fps=audio_fps)
+
+        # Compute number of samples for the desired duration
+        num_samples = int(duration_to_extract * audio_fps)
+        if len(samples) > num_samples:
+            samples = samples[:num_samples]
+
+        # Convert to mono
+        if samples.ndim > 1:
+            mono = samples.mean(axis=1)
+        else:
+            mono = samples
+
+        y = mono.astype(np.float32)
+        sr = int(audio_fps)
+
+        clip.close()
+        return y, sr
+
     except Exception as e:
         if clip is not None:
             clip.close()
@@ -166,23 +165,25 @@ def extract_audio_feature_dict(video_path: str, seconds: int = 5) -> Dict[str, f
     spectral_centroid = float(np.mean(spectral_centroids))
     
     # Compute spectral rolloff (frequency below which 85% of energy is contained)
-    spectral_rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, rolloff=0.85)[0]
-    spectral_rolloff_mean = float(np.mean(spectral_rolloff))
-    
-    # Estimate tempo (beats per minute)
     try:
-        tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-        tempo = float(tempo)
-    except Exception:
-        # If tempo estimation fails, set to 0
-        tempo = 0.0
+        spectral_rolloff = librosa.feature.spectral_rolloff(
+            y=y, sr=sr, roll_percent=0.85
+        )[0]
+        spectral_rolloff_mean = float(np.mean(spectral_rolloff))
+    except TypeError:
+        # Fallback for older librosa versions that may use a different signature
+        spectral_rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)[0]
+        spectral_rolloff_mean = float(np.mean(spectral_rolloff))
+    
+    # Dynamic range (max - min amplitude)
+    dynamic_range = float(np.max(y) - np.min(y)) if len(y) > 0 else 0.0
     
     return {
         "rms_energy": rms_energy,
         "zcr": zcr_mean,
         "spectral_centroid": spectral_centroid,
         "spectral_rolloff": spectral_rolloff_mean,
-        "tempo": tempo,
+        "dynamic_range": dynamic_range,
         "fft_max_freq": fft_max_freq,
         "fft_max_amp": fft_max_amp,
     }
