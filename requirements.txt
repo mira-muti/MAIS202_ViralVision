@@ -12,6 +12,7 @@ soundfile>=0.12.0
 
 # Video Processing
 opencv-python>=4.8.0
+moviepy>=1.0.3
 
 # Web Application
 streamlit>=1.28.0
