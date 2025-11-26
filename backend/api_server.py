@@ -76,8 +76,7 @@ def _handle_predict():
                 video_path=video_path,
                 title=title,
                 hashtags=hashtags,
-                niche=niche,
-                video_filename=filename
+                niche=niche
             )
             
             # Convert numpy types to native Python types for JSON
