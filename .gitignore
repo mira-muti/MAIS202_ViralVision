@@ -22,7 +22,9 @@ ENV/
 *.pkl
 *.h5
 *.pth
-models/*.pkl
+# Keep trained model files
+!models/model.pkl
+!models/model_encoder.pkl
 
 # Data Files (videos and large datasets)
 data/raw/metadata.csv  # Keep structure but ignore actual data
@@ -33,7 +35,19 @@ data/raw/metadata.csv  # Keep structure but ignore actual data
 *.flv
 *.wmv
 *.wav
-data/*.csv  # Uncomment if CSVs are too large
+
+# Keep processed dataset
+!data/final_dataset.csv
+!data/processed/final_dataset.csv
+
+# Ignore raw data except README
+data/raw/
+!data/raw/README.md
+
+# Ignore processed folder contents EXCEPT final dataset
+data/processed/
+!data/processed/README.md
+!data/processed/final_dataset.csv
 
 # Media Files (videos, audio, frames - too large for Git)
 media/videos/
@@ -63,4 +77,3 @@ logs/
 
 # Streamlit
 .streamlit/secrets.toml
-

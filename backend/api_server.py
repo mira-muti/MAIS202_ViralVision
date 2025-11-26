@@ -7,10 +7,17 @@ This server provides REST API endpoints for the React frontend.
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+import sys
 import traceback
+from pathlib import Path
 from werkzeug.utils import secure_filename
-from backend.predict import predict_video
-from backend.prediction_logger import get_prediction_history
+
+# Add backend directory to path for imports
+backend_dir = Path(__file__).parent
+sys.path.insert(0, str(backend_dir))
+
+from predict import predict_video
+from prediction_logger import load_predictions
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
@@ -119,7 +126,7 @@ def predict():
 def history():
     """Get prediction history."""
     try:
-        history_data = get_prediction_history()
+        history_data = load_predictions()
         return jsonify(history_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
