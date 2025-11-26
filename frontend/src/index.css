@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0D0D0F] text-gray-100 font-sans antialiased;
+    font-family: 'Inter', 'Poppins', sans-serif;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
+  }
+  
+  .glass-strong {
+    @apply bg-white/20 backdrop-blur-2xl border border-white/30;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-insta-gradient;
+  }
+  
+  .gradient-border {
+    @apply relative;
+  }
+  
+  .gradient-border::before {
+    content: '';
+    @apply absolute inset-0 rounded-2xl p-[1px] bg-insta-gradient -z-10;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#0D0D0F];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-purple/50 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-purple/70;
+}
+
