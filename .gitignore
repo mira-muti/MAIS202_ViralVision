@@ -77,3 +77,4 @@ logs/
 
 # Streamlit
 .streamlit/secrets.toml
+ffmpeg.zip
