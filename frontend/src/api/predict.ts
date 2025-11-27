@@ -7,10 +7,23 @@ export interface PredictionResult {
   label: 'High' | 'Low'
   prob_high: number
   prob_low: number
-  top_positive_features: Feature[]
-  top_negative_features: Feature[]
-  recommendations: string[]
-  raw_feature_importances: Record<string, number>
+
+  // New backend fields
+  audio_features?: Record<string, number>
+  visual_features?: Record<string, number>
+  text_features?: {
+    caption_length: number
+    hashtag_count: number
+    niche: string
+  }
+  positives?: string[]
+  improvements?: string[]
+
+  // Legacy fields (optional, for backward compatibility)
+  top_positive_features?: Feature[]
+  top_negative_features?: Feature[]
+  recommendations?: string[]
+  raw_feature_importances?: Record<string, number>
 }
 
 export async function predictVideo(

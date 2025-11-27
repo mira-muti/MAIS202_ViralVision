@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles, Music, Sparkle } from 'lucide-react'
+import { ArrowRight, Sparkles, Sparkle } from 'lucide-react'
 import GradientButton from '../components/GradientButton'
 import GlassCard from '../components/GlassCard'
 import AnimatedBackground from '../components/AnimatedBackground'
@@ -37,7 +37,7 @@ export default function Landing() {
             </h1>
             
             <p className="text-xl text-gray-300 mb-4">
-              For <span className="text-purple font-semibold">Music</span> & <span className="text-magenta font-semibold">GRWM</span> Creators
+              For <span className="text-magenta font-semibold">Daily Content Creators</span>
             </p>
             
             <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
@@ -68,49 +68,11 @@ export default function Landing() {
               What We <span className="text-gradient">Analyze</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Tailored insights for Music and GRWM creators
+              Tailored insights for Daily Content Creators
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Music Analysis Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              <GlassCard variant="gradient-border" hover className="h-full">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-insta-gradient flex items-center justify-center">
-                    <Music className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold mb-1">Music Analysis</h3>
-                    <p className="text-sm text-gray-400">For covers, singing, instruments</p>
-                  </div>
-                </div>
-                <ul className="space-y-3 text-gray-300">
-                  <li className="flex items-start gap-2">
-                    <Sparkle className="w-5 h-5 text-purple flex-shrink-0 mt-0.5" />
-                    <span>Hook quality & first 1-2 seconds impact</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Sparkle className="w-5 h-5 text-purple flex-shrink-0 mt-0.5" />
-                    <span>FFT features: energy & brightness</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Sparkle className="w-5 h-5 text-purple flex-shrink-0 mt-0.5" />
-                    <span>Audio clarity & pacing</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Sparkle className="w-5 h-5 text-purple flex-shrink-0 mt-0.5" />
-                    <span>Caption strength & hashtag optimization</span>
-                  </li>
-                </ul>
-              </GlassCard>
-            </motion.div>
-
+          <div className="grid md:grid-cols-1 gap-8 max-w-3xl mx-auto">
             {/* GRWM Analysis Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -160,7 +122,7 @@ export default function Landing() {
               Ready to <span className="text-gradient">optimize</span> your content?
             </h2>
             <p className="text-gray-300 mb-8">
-              Get instant insights tailored to Music and GRWM creators
+              Get instant insights tailored to Daily Content Creators
             </p>
             <Link to="/analyze">
               <GradientButton size="lg">

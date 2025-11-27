@@ -12,7 +12,7 @@ interface UploadBoxProps {
 export default function UploadBox({
   onFileSelect,
   acceptedTypes = ['video/mp4', 'video/mov', 'video/quicktime', 'video/avi'],
-  maxSizeMB = 200,
+  maxSizeMB = 300,
 }: UploadBoxProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)

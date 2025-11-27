@@ -1,4 +1,4 @@
-import { Github, Twitter, Mail } from 'lucide-react'
+import { Github, Instagram, Mail } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -13,7 +13,7 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-6">
             <a
-              href="https://github.com"
+              href="https://github.com/mira-muti/MAIS202_ViralVision"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-purple transition-colors"
@@ -21,15 +21,15 @@ export default function Footer() {
               <Github className="w-5 h-5" />
             </a>
             <a
-              href="https://twitter.com"
+              href="https://www.instagram.com/mira.almuti/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-purple transition-colors"
             >
-              <Twitter className="w-5 h-5" />
+              <Instagram className="w-5 h-5" />
             </a>
             <a
-              href="mailto:contact@viralvision.com"
+              href="mailto:workwithmira1@gmail.com"
               className="text-gray-400 hover:text-purple transition-colors"
             >
               <Mail className="w-5 h-5" />
@@ -37,7 +37,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-white/10 text-center text-sm text-gray-500">
-          <p>&copy; 2024 ViralVision. All rights reserved.</p>
+          <p>&copy; 2025 ViralVision. All rights reserved.</p>
         </div>
       </div>
     </footer>

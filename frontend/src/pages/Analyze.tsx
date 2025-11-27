@@ -9,7 +9,6 @@ import AnimatedBackground from '../components/AnimatedBackground'
 import { predictVideo } from '../api/predict'
 
 const niches = [
-  { label: 'Music', value: 'music' },
   { label: 'GRWM', value: 'GRWM' },
 ]
 
@@ -68,7 +67,7 @@ export default function Analyze() {
 
     try {
       const result = await predictVideo(file, title, hashtags, niche)
-      navigate('/results', { state: { result, niche: niche as 'music' | 'GRWM' } })
+      navigate('/results', { state: { result, niche: niche as 'GRWM' } })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to predict video')
       setIsLoading(false)
@@ -129,7 +128,7 @@ export default function Analyze() {
                     type="text"
                     value={hashtags}
                     onChange={(e) => setHashtags(e.target.value)}
-                    placeholder="#viral #trending #music"
+                    placeholder="#viral #trending #grwm"
                     className="w-full px-4 py-3 rounded-xl glass border border-white/20 focus:border-purple focus:outline-none transition-colors bg-[#0D0D0F]/50"
                   />
                   <p className="text-xs text-gray-500 mt-1">
